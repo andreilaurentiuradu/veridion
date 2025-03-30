@@ -35,26 +35,15 @@ def what_beats(word):
         "Neutron Star", "Supermassive Black Hole", "Entropy"
     ]
     
-    # Cuvântul de referință
     target_word = word
-    
-    # Calculăm embedding-urile
+
     embeddings1 = model.encode(word_texts)
     embedding2 = model.encode([target_word])
-    
-    # Calculăm similaritățile cosinus
+
     similarities = cosine_similarity(embeddings1, embedding2).flatten()
-    
-    # Sortăm cuvintele după similaritate
+
     sorted_indices = np.argsort(similarities)[::-1]  # Sortare descrescătoare
     top_10 = [word_texts[i] for i in sorted_indices[:10]]
-    
-    # Afișare rezultate
-    # print(f"Top 10 cuvinte similare cu '{target_word}':\n")
-    # for word in top_10:
-    #     print(f"{word: <20}")
-    
-    
     
     response: ChatResponse = chat(model='llama3.2:1b', messages=[
       {
@@ -72,36 +61,12 @@ def what_beats(word):
       }
     ])
     
-    # response: ChatResponse = chat(model='llama3.2:1b', messages=[
-    #   {
-    #     'role': 'user',
-    #     'content': f"""I will provide you with a list of 10 words. 
-    #                 I will also give you a single word. Your goal is to choose from the provided list 5 words 
-    #                 which logically counter the given single word. Each word should be associated with a confidence 
-    #                 score between 0 and 1 that you calculate based on how sure you are that the word you generate logically counters the word I give you. 
-    
-    #                 This is the single word: {target_word}. 
-    #                 This is the list of dictionaries: {top_10}. 
-    #                 Your response should be formatted like this: 
-    #                 [{{word1": "confidence_score1"}}, {{"word2": "confidence_score2"}}, {{"word3": "confidence_score3"}}, {{"word4": "confidence_score4"}}, {{"word5": "confidence_score5"}}]
-    #              """,
-    #   }
-    # ])
-    
-    
-    # Regex pentru a extrage cuvintele și scorurile lor
     pattern = r'{"(\w+)": ([0-9.]+)}'
-    
     matches = re.findall(pattern, response['message']['content'])
-    # print(matches)
-    # print(response['message']['content'])
-    # Transformăm rezultatul într-o listă de dicționare
     extracted_data = [{word: float(score)} for word, score in matches]
-    
-    # print(extracted_data)
+
     if extracted_data == [] :
         return top_10[0]
-    # Extragem doar cuvintele cu scor > 0.5
     filtered = [word for item in extracted_data for word, score in item.items() if score > 0.5]
     if filtered == [] :
         if extracted_data == []:
@@ -109,17 +74,12 @@ def what_beats(word):
         else:
             max_word = list(max(data, key=lambda x: list(x.values())[0]).keys())[0]
             return max_word
-    # print(filtered)
 
-    # Creează un dicționar cu indicii din top_10 pentru a sorta filtered
     top_10_indices = {word: i for i, word in enumerate(top_10)}
-    
-    # Sortează filtered pe baza ordinii din top_10
     sorted_filtered = sorted(filtered, key=lambda x: top_10_indices.get(x, float('inf')))
-
     return sorted_filtered[0]
+    
 def play_game(player_id):
-
     for round_id in range(1, NUM_ROUNDS+1):
         round_num = -1
         while round_num != round_id:
@@ -135,8 +95,6 @@ def play_game(player_id):
             print(status.json())
         
         choosen_word = what_beats(sys_word)
-        # print("print:" + choosen_word)
-        # print("da:" + sys_word)
         data = {"player_id": player_id, "word_id": choosen_word, "round_id": round_id}
         response = requests.post(post_url, json=data)
         print(response.json())
