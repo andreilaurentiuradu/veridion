@@ -117,7 +117,7 @@ def what_beats(word):
     # Sortează filtered pe baza ordinii din top_10
     sorted_filtered = sorted(filtered, key=lambda x: top_10_indices.get(x, float('inf')))
 
-    return filtered[0]
+    return sorted_filtered[0]
 def play_game(player_id):
 
     for round_id in range(1, NUM_ROUNDS+1):
